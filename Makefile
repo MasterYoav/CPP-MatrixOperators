@@ -1,4 +1,5 @@
 # Author: realyoavperetz@gmail.com
+
 .PHONY: Main test valgrind clean
 # Compile and run the main program
 Main: main.cpp source/SquareMatrix.cpp

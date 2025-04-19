@@ -56,21 +56,9 @@ SquareMat& SquareMat::operator=(const SquareMat& other) {
     return *this;
 }
 
-// Row accessor (non-const)
-double* SquareMat::operator[](int index) {
-    if (index < 0 || index >= size)
-        throw std::out_of_range("Index out of bounds");
-    return data[index];
-}
+// --- Operators in specified order ---
 
-// Row accessor (const version)
-const double* SquareMat::operator[](int index) const {
-    if (index < 0 || index >= size)
-        throw std::out_of_range("Index out of bounds");
-    return data[index];
-}
-
-// Addition operator
+// 1. Addition operator
 SquareMat SquareMat::operator+(const SquareMat& other) const {
     if (size != other.size) {
         throw std::invalid_argument("Matrices must be of the same size");
@@ -84,7 +72,7 @@ SquareMat SquareMat::operator+(const SquareMat& other) const {
     return result;
 }
 
-// Subtraction operator
+// 2. Subtraction operator
 SquareMat SquareMat::operator-(const SquareMat& other) const {
     if (size != other.size) {
         throw std::invalid_argument("Matrices must be of the same size");
@@ -98,7 +86,18 @@ SquareMat SquareMat::operator-(const SquareMat& other) const {
     return result;
 }
 
-// Multiplication operator
+// 3. Unary minus operator
+SquareMat SquareMat::operator-() const {
+    SquareMat result(size);
+    for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+            result[i][j] = -data[i][j];
+        }
+    }
+    return result;
+}
+
+// 4. Matrix multiplication operator
 SquareMat SquareMat::operator*(const SquareMat& other) const {
     if (size != other.size) {
         throw std::invalid_argument("Matrices must be of the same size");
@@ -115,7 +114,23 @@ SquareMat SquareMat::operator*(const SquareMat& other) const {
     return result;
 }
 
-// Element-wise multiplication operator (Hadamard product)
+// 5a. Scalar multiplication operator (from right)
+SquareMat SquareMat::operator*(double scalar) const {
+    SquareMat result(size);
+    for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+            result[i][j] = data[i][j] * scalar;
+        }
+    }
+    return result;
+}
+
+// 5b. Scalar multiplication operator (from left)
+SquareMat operator*(double scalar, const SquareMat& mat) {
+    return mat * scalar; // Reuse the existing method
+}
+
+// 6. Element-wise multiplication operator
 SquareMat SquareMat::operator%(const SquareMat& other) const {
     if (size != other.size) {
         throw std::invalid_argument("Matrices must be of the same size");
@@ -129,37 +144,7 @@ SquareMat SquareMat::operator%(const SquareMat& other) const {
     return result;
 }
 
-// Scalar multiplication operator
-SquareMat SquareMat::operator*(double scalar) const {
-    SquareMat result(size);
-    for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < size; ++j) {
-            result[i][j] = data[i][j] * scalar;
-        }
-    }
-    return result;
-}
-
-// Scalar multiplication operator (from left)
-SquareMat operator*(double scalar, const SquareMat& mat) {
-    return mat * scalar; // Reuse the existing method
-}
-
-// Scalar division operator
-SquareMat SquareMat::operator/(double scalar) const {
-    if (scalar == 0) {
-        throw std::invalid_argument("Division by zero");
-    }
-    SquareMat result(size);
-    for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < size; ++j) {
-            result[i][j] = data[i][j] / scalar;
-        }
-    }
-    return result;
-}
-
-// Scalar modulo operator
+// 7. Scalar modulo operator
 SquareMat SquareMat::operator%(int scalar) const {
     if (scalar == 0) {
         throw std::invalid_argument("Modulo by zero");
@@ -173,29 +158,21 @@ SquareMat SquareMat::operator%(int scalar) const {
     return result;
 }
 
-// Unary minus operator
-SquareMat SquareMat::operator-() const {
+// 8. Scalar division operator
+SquareMat SquareMat::operator/(double scalar) const {
+    if (scalar == 0) {
+        throw std::invalid_argument("Division by zero");
+    }
     SquareMat result(size);
     for (int i = 0; i < size; ++i) {
         for (int j = 0; j < size; ++j) {
-            result[i][j] = -data[i][j];
+            result[i][j] = data[i][j] / scalar;
         }
     }
     return result;
 }
 
-// Transpose operator
-SquareMat SquareMat::operator~() const {
-    SquareMat result(size);
-    for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < size; ++j) {
-            result[i][j] = data[j][i];
-        }
-    }
-    return result;
-}
-
-// Power operator
+// 9. Power operator
 SquareMat SquareMat::operator^(int power) const {
     if (power < 0) {
         throw std::invalid_argument("Negative powers are not supported");
@@ -216,6 +193,7 @@ SquareMat SquareMat::operator^(int power) const {
     return result;
 }
 
+// 10. Increment operators
 // Pre-increment operator
 SquareMat& SquareMat::operator++() {
     for (int i = 0; i < size; ++i) {
@@ -233,6 +211,7 @@ SquareMat SquareMat::operator++(int) {
     return temp;           // Return saved state
 }
 
+// 11. Decrement operators
 // Pre-decrement operator
 SquareMat& SquareMat::operator--() {
     for (int i = 0; i < size; ++i) {
@@ -250,6 +229,109 @@ SquareMat SquareMat::operator--(int) {
     return temp;           // Return saved state
 }
 
+// 12. Transpose operator
+SquareMat SquareMat::operator~() const {
+    SquareMat result(size);
+    for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+            result[i][j] = data[j][i];
+        }
+    }
+    return result;
+}
+
+// 13. Access operators
+// Row accessor (non-const)
+double* SquareMat::operator[](int index) {
+    if (index < 0 || index >= size)
+        throw std::out_of_range("Index out of bounds");
+    return data[index];
+}
+
+// Row accessor (const version)
+const double* SquareMat::operator[](int index) const {
+    if (index < 0 || index >= size)
+        throw std::out_of_range("Index out of bounds");
+    return data[index];
+}
+
+// Helper function to calculate the sum of all elements in the matrix
+inline double sumElements(const SquareMat& mat) {
+    double sum = 0;
+    for (int i = 0; i < mat.size; ++i) {
+        for (int j = 0; j < mat.size; ++j) {
+            sum += mat[i][j];
+        }
+    }
+    return sum;
+}
+
+// 14. Equality operator
+bool SquareMat::operator==(const SquareMat& other) const {
+    return sumElements(*this) == sumElements(other);
+}
+
+// 15. Inequality operator
+bool SquareMat::operator!=(const SquareMat& other) const {
+    return !(*this == other);
+}
+
+// Extra comparison operators
+// Less than operator
+bool SquareMat::operator<(const SquareMat& other) const {
+    return sumElements(*this) < sumElements(other);
+}
+
+// Greater than operator
+bool SquareMat::operator>(const SquareMat& other) const {
+    return sumElements(*this) > sumElements(other);
+}
+
+// Less than or equal to operator
+bool SquareMat::operator<=(const SquareMat& other) const {
+    return !(*this > other);
+}
+
+// Greater than or equal to operator
+bool SquareMat::operator>=(const SquareMat& other) const {
+    return !(*this < other);
+}
+
+// Helper function to calculate the determinant of a matrix
+static double determinant(double** matrix, int n) {
+    if (n == 1) return matrix[0][0];
+    if (n == 2) return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+    double det = 0;
+    double** submatrix = new double*[n-1];
+    for (int i = 0; i < n-1; ++i) {
+        submatrix[i] = new double[n-1];
+    }
+    for (int x = 0; x < n; ++x) {
+        int subi = 0;
+        for (int i = 1; i < n; ++i) {
+            int subj = 0;
+            for (int j = 0; j < n; ++j) {
+                if (j == x) continue;
+                submatrix[subi][subj] = matrix[i][j];
+                ++subj;
+            }
+            ++subi;
+        }
+        det += (x % 2 == 0 ? 1 : -1) * matrix[0][x] * determinant(submatrix, n-1);
+    }
+    for (int i = 0; i < n-1; ++i) {
+        delete[] submatrix[i];
+    }
+    delete[] submatrix;
+    return det;
+}
+
+// 16. Determinant operator
+double SquareMat::operator!() const {
+    return determinant(data, size);
+}
+
+// 17. Compound assignment operators
 // Compound assignment: Addition
 SquareMat& SquareMat::operator+=(const SquareMat& other) {
     if (size != other.size) {
@@ -321,82 +403,7 @@ SquareMat& SquareMat::operator%=(const SquareMat& other) {
     return *this;
 }
 
-// Helper function to calculate the sum of all elements in the matrix
-inline double sumElements(const SquareMat& mat) {
-    double sum = 0;
-    for (int i = 0; i < mat.size; ++i) {
-        for (int j = 0; j < mat.size; ++j) {
-            sum += mat[i][j];
-        }
-    }
-    return sum;
-}
-
-// Equality operator
-bool SquareMat::operator==(const SquareMat& other) const {
-    return sumElements(*this) == sumElements(other);
-}
-
-// Inequality operator
-bool SquareMat::operator!=(const SquareMat& other) const {
-    return !(*this == other);
-}
-
-// Less than operator
-bool SquareMat::operator<(const SquareMat& other) const {
-    return sumElements(*this) < sumElements(other);
-}
-
-// Greater than operator
-bool SquareMat::operator>(const SquareMat& other) const {
-    return sumElements(*this) > sumElements(other);
-}
-
-// Less than or equal to operator
-bool SquareMat::operator<=(const SquareMat& other) const {
-    return !(*this > other);
-}
-
-// Greater than or equal to operator
-bool SquareMat::operator>=(const SquareMat& other) const {
-    return !(*this < other);
-}
-
-// Helper function to calculate the determinant of a matrix
-static double determinant(double** matrix, int n) {
-    if (n == 1) return matrix[0][0];
-    if (n == 2) return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
-    double det = 0;
-    double** submatrix = new double*[n-1];
-    for (int i = 0; i < n-1; ++i) {
-        submatrix[i] = new double[n-1];
-    }
-    for (int x = 0; x < n; ++x) {
-        int subi = 0;
-        for (int i = 1; i < n; ++i) {
-            int subj = 0;
-            for (int j = 0; j < n; ++j) {
-                if (j == x) continue;
-                submatrix[subi][subj] = matrix[i][j];
-                ++subj;
-            }
-            ++subi;
-        }
-        det += (x % 2 == 0 ? 1 : -1) * matrix[0][x] * determinant(submatrix, n-1);
-    }
-    for (int i = 0; i < n-1; ++i) {
-        delete[] submatrix[i];
-    }
-    delete[] submatrix;
-    return det;
-}
-
-// Determinant operator
-double SquareMat::operator!() const {
-    return determinant(data, size);
-}
-
-// Output operator
+// 18. Output operator
 std::ostream& operator<<(std::ostream& os, const SquareMat& mat) {
     for (int i = 0; i < mat.size; ++i) {
         for (int j = 0; j < mat.size; ++j) {
@@ -407,4 +414,4 @@ std::ostream& operator<<(std::ostream& os, const SquareMat& mat) {
     return os;
 }
 
-} // namespace operators
+} 
